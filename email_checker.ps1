@@ -5,8 +5,8 @@ param (
 
 function Show-Banner {
     Write-Host "`n=============================================================" -ForegroundColor Cyan
-    Write-Host "  DKIM-DMARC-SPF-MX Checker by Alejandro Leon AKA GX " -ForegroundColor Cyan
-    Write-Host "  Uso ético y autorizado solamente ⚡" -ForegroundColor Cyan
+    Write-Host "  DKIM-DMARC-SPF-MX Checker por Alejandro Leon AKA GX " -ForegroundColor Cyan
+    Write-Host "  Uso etico y autorizado solamente " -ForegroundColor Cyan
     Write-Host "=============================================================`n" -ForegroundColor Cyan
 }
 
@@ -46,7 +46,7 @@ function Check-DKIM {
     }
 
     if (-not $found) {
-        Write-Host "No se encontró DKIM con los selectores comunes." -ForegroundColor Red
+        Write-Host "No se encontro DKIM con los selectores comunes." -ForegroundColor Red
     }
     Write-Host "`n=============================================================" -ForegroundColor Cyan
 }
@@ -82,7 +82,7 @@ function Check-MX {
 # Ejecución principal
 # ============================
 Show-Banner
-Write-Host "Verificando autenticación de correo en: $Domain`n"
+Write-Host "Verificando autenticacion de correo en: $Domain`n"
 
 Check-SPF
 Start-Sleep -Seconds 3
