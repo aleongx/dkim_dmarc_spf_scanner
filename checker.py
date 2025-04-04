@@ -8,7 +8,7 @@ init(autoreset=True)
 # Función para mostrar el banner
 def banner():
     print(Fore.CYAN + "\n" + "="*60)
-    print(Fore.CYAN + "  DKIM-DMARC-SPF Checker by Alejandro Leon AKA GX ")
+    print(Fore.CYAN + "  DKIM-DMARC-SPF-MX Checker by Alejandro Leon AKA GX ")
     print(Fore.CYAN + "  Uso ético y autorizado solamente ⚡")
     print(Fore.CYAN + "="*60 + "\n")
 
@@ -32,19 +32,23 @@ def check_spf(domain):
 # Función para analizar DKIM
 def check_dkim(domain):
     print(Fore.GREEN + "Analizando DKIM...")
-    selector = 'default'  # Algunos dominios usan otro selector
-    dkim_domain = f"{selector}._domainkey.{domain}"
-    try:
-        answers = dns.resolver.resolve(dkim_domain, 'TXT')
-        for rdata in answers:
-            print(Fore.GREEN + f"DKIM encontrado: {rdata.to_text()}")
-            print(Fore.CYAN + "="*60 + "\n")  # Separador estético
-            return
-        print(Fore.RED + "DKIM no encontrado")
-        print(Fore.CYAN + "="*60 + "\n")
-    except Exception as e:
-        print(Fore.RED + f"Error al buscar DKIM: {e}")
-        print(Fore.CYAN + "="*60 + "\n")
+    selectores_comunes = ['default', 'selector1', 'selector2', 'mail']
+    for selector in selectores_comunes:
+        dkim_domain = f"{selector}._domainkey.{domain}"
+        try:
+            answers = dns.resolver.resolve(dkim_domain, 'TXT')
+            for rdata in answers:
+                print(Fore.GREEN + f"DKIM encontrado con selector '{selector}': {rdata.to_text()}")
+                print(Fore.CYAN + "="*60 + "\n")  # Separador estético
+                return
+        except dns.resolver.NoAnswer:
+            continue  # Si no se encuentra, seguir probando con otros selectores
+        except Exception as e:
+            print(Fore.RED + f"Error al buscar DKIM con selector '{selector}': {e}")
+            print(Fore.CYAN + "="*60 + "\n")
+    
+    print(Fore.RED + "No se encontró DKIM con los selectores comunes")
+    print(Fore.CYAN + "="*60 + "\n")
 
 # Función para analizar DMARC
 def check_dmarc(domain):
@@ -62,13 +66,29 @@ def check_dmarc(domain):
         print(Fore.RED + f"Error al buscar DMARC: {e}")
         print(Fore.CYAN + "="*60 + "\n")
 
+# Función para analizar los registros MX
+def check_mx(domain):
+    print(Fore.GREEN + "Analizando registros MX...")
+    try:
+        answers = dns.resolver.resolve(domain, 'MX')
+        if answers:
+            for rdata in answers:
+                print(Fore.GREEN + f"Registro MX encontrado: {rdata.exchange} con prioridad {rdata.preference}")
+            print(Fore.CYAN + "="*60 + "\n")  # Separador estético
+        else:
+            print(Fore.RED + "No se encontraron registros MX")
+            print(Fore.CYAN + "="*60 + "\n")
+    except Exception as e:
+        print(Fore.RED + f"Error al buscar registros MX: {e}")
+        print(Fore.CYAN + "="*60 + "\n")
+
 # Función principal para coordinar el análisis
 def main():
     # Mostrar el banner
     banner()
 
     # Configuración del parser para recibir el dominio
-    parser = argparse.ArgumentParser(description='Verifica registros DMARC, DKIM y SPF de un dominio')
+    parser = argparse.ArgumentParser(description='Verifica registros DMARC, DKIM, SPF y MX de un dominio')
     parser.add_argument('-d', '--domain', required=True, help='Dominio a verificar')
     args = parser.parse_args()
     
@@ -85,6 +105,10 @@ def main():
 
     # Llamar a la función para verificar DMARC
     check_dmarc(domain)
+    time.sleep(5)
+
+    # Llamar a la función para verificar MX
+    check_mx(domain)
 
 # Ejecutar la función principal si es el archivo principal
 if __name__ == '__main__':
