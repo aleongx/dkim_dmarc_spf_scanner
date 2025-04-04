@@ -1,33 +1,54 @@
 param (
     [Parameter(Mandatory = $true)]
-    [string]$Domain
+    [string]$Domain,
+
+    [Parameter(Mandatory = $true)]
+    [string]$OutputFile
 )
 
 function Show-Banner {
-    Write-Host "`n=============================================================" -ForegroundColor Cyan
-    Write-Host "  DKIM-DMARC-SPF-MX Checker por Alejandro Leon AKA GX " -ForegroundColor Cyan
-    Write-Host "  Uso etico y autorizado solamente " -ForegroundColor Cyan
-    Write-Host "=============================================================`n" -ForegroundColor Cyan
+    $banner = @"
+=============================================================
+  DKIM-DMARC-SPF-MX Checker por Alejandro Leon AKA GX 
+  Uso etico y autorizado solamente 
+=============================================================
+"@
+    Write-Host $banner -ForegroundColor Cyan
+    $banner | Out-File -Append $OutputFile
 }
 
 function Check-SPF {
-    Write-Host "Analizando SPF..." -ForegroundColor Green
+    $message = "Analizando SPF..."
+    Write-Host $message -ForegroundColor Green
+    $message | Out-File -Append $OutputFile
     try {
         $records = Resolve-DnsName -Name $Domain -Type TXT -ErrorAction Stop
         $spf = $records | Where-Object { $_.Strings -match "^v=spf1" }
         if ($spf) {
-            $spf | ForEach-Object { Write-Host "SPF encontrado: $($_.Strings)" -ForegroundColor Green }
+            $spf | ForEach-Object { 
+                $message = "SPF encontrado: $($_.Strings)"
+                Write-Host $message -ForegroundColor Green
+                $message | Out-File -Append $OutputFile
+            }
         } else {
-            Write-Host "SPF no encontrado." -ForegroundColor Red
+            $message = "SPF no encontrado."
+            Write-Host $message -ForegroundColor Red
+            $message | Out-File -Append $OutputFile
         }
     } catch {
-        Write-Host "Error al buscar SPF: $_" -ForegroundColor Red
+        $message = "Error al buscar SPF: $_"
+        Write-Host $message -ForegroundColor Red
+        $message | Out-File -Append $OutputFile
     }
-    Write-Host "`n=============================================================" -ForegroundColor Cyan
+    $message = "`n============================================================="
+    Write-Host $message -ForegroundColor Cyan
+    $message | Out-File -Append $OutputFile
 }
 
 function Check-DKIM {
-    Write-Host "Analizando DKIM..." -ForegroundColor Green
+    $message = "Analizando DKIM..."
+    Write-Host $message -ForegroundColor Green
+    $message | Out-File -Append $OutputFile
     $selectors = @('default', 'selector1', 'selector2', 'mail')
     $found = $false
 
@@ -36,7 +57,9 @@ function Check-DKIM {
         try {
             $record = Resolve-DnsName -Name $dkimDomain -Type TXT -ErrorAction Stop
             foreach ($entry in $record) {
-                Write-Host "DKIM encontrado con selector '$selector': $($entry.Strings)" -ForegroundColor Green
+                $message = "DKIM encontrado con selector '$selector': $($entry.Strings)"
+                Write-Host $message -ForegroundColor Green
+                $message | Out-File -Append $OutputFile
                 $found = $true
             }
             break
@@ -46,43 +69,65 @@ function Check-DKIM {
     }
 
     if (-not $found) {
-        Write-Host "No se encontro DKIM con los selectores comunes." -ForegroundColor Red
+        $message = "No se encontro DKIM con los selectores comunes."
+        Write-Host $message -ForegroundColor Red
+        $message | Out-File -Append $OutputFile
     }
-    Write-Host "`n=============================================================" -ForegroundColor Cyan
+    $message = "`n============================================================="
+    Write-Host $message -ForegroundColor Cyan
+    $message | Out-File -Append $OutputFile
 }
 
 function Check-DMARC {
-    Write-Host "Analizando DMARC..." -ForegroundColor Green
+    $message = "Analizando DMARC..."
+    Write-Host $message -ForegroundColor Green
+    $message | Out-File -Append $OutputFile
     $dmarcDomain = "_dmarc.$Domain"
     try {
         $record = Resolve-DnsName -Name $dmarcDomain -Type TXT -ErrorAction Stop
         foreach ($entry in $record) {
-            Write-Host "DMARC encontrado: $($entry.Strings)" -ForegroundColor Green
+            $message = "DMARC encontrado: $($entry.Strings)"
+            Write-Host $message -ForegroundColor Green
+            $message | Out-File -Append $OutputFile
         }
     } catch {
-        Write-Host "DMARC no encontrado o error: $_" -ForegroundColor Red
+        $message = "DMARC no encontrado o error: $_"
+        Write-Host $message -ForegroundColor Red
+        $message | Out-File -Append $OutputFile
     }
-    Write-Host "`n=============================================================" -ForegroundColor Cyan
+    $message = "`n============================================================="
+    Write-Host $message -ForegroundColor Cyan
+    $message | Out-File -Append $OutputFile
 }
 
 function Check-MX {
-    Write-Host "Analizando registros MX..." -ForegroundColor Green
+    $message = "Analizando registros MX..."
+    Write-Host $message -ForegroundColor Green
+    $message | Out-File -Append $OutputFile
     try {
         $records = Resolve-DnsName -Name $Domain -Type MX -ErrorAction Stop
         foreach ($mx in $records) {
-            Write-Host "MX encontrado: $($mx.NameExchange) con prioridad $($mx.Preference)" -ForegroundColor Green
+            $message = "MX encontrado: $($mx.NameExchange) con prioridad $($mx.Preference)"
+            Write-Host $message -ForegroundColor Green
+            $message | Out-File -Append $OutputFile
         }
     } catch {
-        Write-Host "No se encontraron registros MX o error: $_" -ForegroundColor Red
+        $message = "No se encontraron registros MX o error: $_"
+        Write-Host $message -ForegroundColor Red
+        $message | Out-File -Append $OutputFile
     }
-    Write-Host "`n=============================================================" -ForegroundColor Cyan
+    $message = "`n============================================================="
+    Write-Host $message -ForegroundColor Cyan
+    $message | Out-File -Append $OutputFile
 }
 
 # ============================
 # Ejecución principal
 # ============================
 Show-Banner
-Write-Host "Verificando autenticacion de correo en: $Domain`n"
+$message = "Verificando autenticacion de correo en: $Domain`n"
+Write-Host $message
+$message | Out-File -Append $OutputFile
 
 Check-SPF
 Start-Sleep -Seconds 3
